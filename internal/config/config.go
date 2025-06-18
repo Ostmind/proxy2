@@ -3,14 +3,19 @@ package config
 import (
 	"fmt"
 	"os"
+	"strconv"
+	"time"
 )
 
 type ClientProxyConfig struct {
-	URL string
+	URL     string
+	Timeout time.Duration
 }
 
 type ServerProxyConfig struct {
-	Port string
+	Port            string
+	ShutdownTimeout time.Duration
+	EnvType         string
 }
 
 type AppConfig struct {
@@ -38,14 +43,25 @@ func readEnvConfig() (*AppConfig, error) {
 	url := os.Getenv("PROXY_URL")
 	//url := "https://jsonplaceholder.typicode.com/posts"
 
-	fmt.Printf("URL: %d\n", port)
+	shutdownTimeout := os.Getenv("SHUTDOWN_TIMEOUT_SECONDS")
+	shutdownTimeoutInt, _ := strconv.Atoi(shutdownTimeout)
+	//shutdownTimeout := 5
+
+	clientTimeout := os.Getenv("CLIENT_TIMEOUT_SECONDS")
+	clientTimeoutInt, _ := strconv.Atoi(clientTimeout)
+	//clientTimeout := 5
+
+	envType := os.Getenv("ENV_TYPE")
 
 	return &AppConfig{
 		Server: ServerProxyConfig{
-			Port: port,
+			Port:            port,
+			ShutdownTimeout: time.Duration(shutdownTimeoutInt),
+			EnvType:         envType,
 		},
 		Client: ClientProxyConfig{
-			URL: url,
+			URL:     url,
+			Timeout: time.Duration(clientTimeoutInt),
 		},
 	}, nil
 }

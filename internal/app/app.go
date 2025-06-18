@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"log/slog"
+	"net/http"
 	cl "proxynum2/internal/client"
 	"proxynum2/internal/config"
 	handl "proxynum2/internal/server/handler"
@@ -18,7 +19,7 @@ type App struct {
 
 func New(logger *slog.Logger, cfg *config.AppConfig) *App {
 
-	client := cl.New(cfg.Client, logger)
+	client := cl.New(cfg.Client, logger, &http.Client{Timeout: cfg.Client.Timeout})
 
 	handler := handl.New(logger, client)
 
@@ -36,11 +37,11 @@ func (a App) Run() {
 	go a.server.Run()
 }
 
-func (a App) Stop(shutdownTimeout time.Duration) {
+func (a App) Stop(shutdownTimeout time.Duration, ctxParent context.Context) {
 	a.logger.Info("Stopping app...")
 
 	timeout := shutdownTimeout * time.Second
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(ctxParent, timeout)
 	defer cancel()
 
 	doneCh := make(chan error)

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"log/slog"
 	"os"
@@ -8,6 +9,7 @@ import (
 	application "proxynum2/internal/app"
 	"proxynum2/internal/config"
 	"proxynum2/internal/server/logger"
+	"syscall"
 )
 
 func main() {
@@ -16,7 +18,7 @@ func main() {
 		log.Fatal("No config cannot start server", slog.Any("error", err))
 	}
 
-	sloger := logger.SetupLogger()
+	sloger := logger.SetupLogger(cfg.Server.EnvType)
 	sloger.Info("starting proxy")
 
 	app := application.New(sloger, cfg)
@@ -24,9 +26,12 @@ func main() {
 	app.Run()
 
 	stopChan := make(chan os.Signal, 1)
-	signal.Notify(stopChan, os.Interrupt)
+	signal.Notify(stopChan,
+		os.Interrupt,
+		syscall.SIGINT,
+		syscall.SIGTERM)
 
 	<-stopChan
 	sloger.Info("Recieved interrupt signal")
-	app.Stop(5)
+	app.Stop(cfg.Server.ShutdownTimeout, context.Background())
 }

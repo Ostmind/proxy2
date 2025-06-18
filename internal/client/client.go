@@ -1,6 +1,8 @@
 package client
 
 import (
+	"context"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"proxynum2/internal/config"
@@ -9,12 +11,12 @@ import (
 type ClientProxy struct {
 	cfg    config.ClientProxyConfig
 	logger *slog.Logger
-	client http.Client
+	client *http.Client
 }
 
-func New(cfg config.ClientProxyConfig, logger *slog.Logger) *ClientProxy {
+func New(cfg config.ClientProxyConfig, logger *slog.Logger, client *http.Client) *ClientProxy {
 	return &ClientProxy{
-		client: http.Client{},
+		client: client,
 		logger: logger,
 		cfg:    cfg,
 	}
@@ -22,18 +24,16 @@ func New(cfg config.ClientProxyConfig, logger *slog.Logger) *ClientProxy {
 
 func (cl ClientProxy) Proxy(r *http.Request) (*http.Response, error) {
 
-	proxyRequest, err := http.NewRequest(r.Method, cl.cfg.URL, r.Body)
+	ctx, cancel := context.WithTimeout(context.Background(), cl.cfg.Timeout)
+	defer cancel()
+
+	proxyRequest, err := http.NewRequestWithContext(ctx, r.Method, cl.cfg.URL, r.Body)
 	if err != nil {
+		err := fmt.Errorf("error Creating Request %s", err)
 		return nil, err
 	}
 
 	for key, value := range r.Header {
-
-		if len(value) == 1 {
-			proxyRequest.Header.Set(key, value[0])
-			continue
-		}
-
 		for _, header := range value {
 			proxyRequest.Header.Add(key, header)
 		}
@@ -41,6 +41,7 @@ func (cl ClientProxy) Proxy(r *http.Request) (*http.Response, error) {
 
 	res, err := cl.client.Do(proxyRequest)
 	if err != nil {
+		err := fmt.Errorf("error Sending Request %s", err)
 		return nil, err
 	}
 
