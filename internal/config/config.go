@@ -2,8 +2,8 @@ package config
 
 import (
 	"fmt"
+	"github.com/emillamm/envx"
 	"os"
-	"strconv"
 	"time"
 )
 
@@ -35,33 +35,34 @@ func New() (cfg *AppConfig, err error) {
 }
 
 func readEnvConfig() (*AppConfig, error) {
-	port := os.Getenv("SERVER_PORT")
+
+	var env envx.EnvX = os.Getenv
+
+	port, _ := env.String("SERVER_PORT").Default("8080")
 	//port := "8080"
 
 	fmt.Printf("port: %d\n", port)
 
-	url := os.Getenv("PROXY_URL")
+	url, _ := env.String("PROXY_URL").Default("https://jsonplaceholder.typicode.com/posts")
 	//url := "https://jsonplaceholder.typicode.com/posts"
 
-	shutdownTimeout := os.Getenv("SHUTDOWN_TIMEOUT_SECONDS")
-	shutdownTimeoutInt, _ := strconv.Atoi(shutdownTimeout)
+	shutdownTimeout, _ := env.Duration("SHUTDOWN_TIMEOUT_SECONDS").Default(5)
 	//shutdownTimeout := 5
 
-	clientTimeout := os.Getenv("CLIENT_TIMEOUT_SECONDS")
-	clientTimeoutInt, _ := strconv.Atoi(clientTimeout)
+	clientTimeout, _ := env.Duration("CLIENT_TIMEOUT_SECONDS").Default(5)
 	//clientTimeout := 5
 
-	envType := os.Getenv("ENV_TYPE")
+	envType, _ := env.String("ENV_TYPE").Default("local")
 
 	return &AppConfig{
 		Server: ServerProxyConfig{
 			Port:            port,
-			ShutdownTimeout: time.Duration(shutdownTimeoutInt),
+			ShutdownTimeout: shutdownTimeout,
 			EnvType:         envType,
 		},
 		Client: ClientProxyConfig{
 			URL:     url,
-			Timeout: time.Duration(clientTimeoutInt),
+			Timeout: clientTimeout,
 		},
 	}, nil
 }

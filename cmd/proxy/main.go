@@ -33,5 +33,5 @@ func main() {
 
 	<-stopChan
 	sloger.Info("Recieved interrupt signal")
-	app.Stop(cfg.Server.ShutdownTimeout, context.Background())
+	app.Stop(context.Background(), cfg.Server.ShutdownTimeout)
 }

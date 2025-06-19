@@ -37,16 +37,16 @@ func (a App) Run() {
 	go a.server.Run()
 }
 
-func (a App) Stop(shutdownTimeout time.Duration, ctxParent context.Context) {
+func (a App) Stop(ctx context.Context, shutdownTimeout time.Duration) {
 	a.logger.Info("Stopping app...")
 
 	timeout := shutdownTimeout * time.Second
-	ctx, cancel := context.WithTimeout(ctxParent, timeout)
+	ctxWithTimeout, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
 	doneCh := make(chan error)
 	go func() {
-		doneCh <- a.server.Stop(ctx)
+		doneCh <- a.server.Stop(ctxWithTimeout)
 	}()
 
 	select {
