@@ -39,18 +39,14 @@ func readEnvConfig() (*AppConfig, error) {
 	var env envx.EnvX = os.Getenv
 
 	port, _ := env.String("SERVER_PORT").Default("8080")
-	//port := "8080"
 
 	fmt.Printf("port: %d\n", port)
 
 	url, _ := env.String("PROXY_URL").Default("https://jsonplaceholder.typicode.com/posts")
-	//url := "https://jsonplaceholder.typicode.com/posts"
 
 	shutdownTimeout, _ := env.Duration("SHUTDOWN_TIMEOUT_SECONDS").Default(5)
-	//shutdownTimeout := 5
 
 	clientTimeout, _ := env.Duration("CLIENT_TIMEOUT_SECONDS").Default(5)
-	//clientTimeout := 5
 
 	envType, _ := env.String("ENV_TYPE").Default("local")
 

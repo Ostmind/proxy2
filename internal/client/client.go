@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"proxynum2/internal/config"
+	"proxynum2/internal/server/utils"
 )
 
 type ClientProxy struct {
@@ -29,20 +30,14 @@ func (cl ClientProxy) Proxy(r *http.Request) (*http.Response, error) {
 
 	proxyRequest, err := http.NewRequestWithContext(ctx, r.Method, cl.cfg.URL, r.Body)
 	if err != nil {
-		err := fmt.Errorf("error Creating Request %s", err)
-		return nil, err
+		return nil, fmt.Errorf("error Creating Request %s", err)
 	}
 
-	for key, value := range r.Header {
-		for _, header := range value {
-			proxyRequest.Header.Add(key, header)
-		}
-	}
+	utils.CopyHeaders(r.Header, proxyRequest.Header)
 
 	res, err := cl.client.Do(proxyRequest)
 	if err != nil {
-		err := fmt.Errorf("error Sending Request %s", err)
-		return nil, err
+		return nil, fmt.Errorf("error Sending Request %s", err)
 	}
 
 	return res, nil
